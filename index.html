@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NutriTrade</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #eaf6fb; }
+    header { background: black; color: white; padding: 20px; text-align: center; }
+    header img { height: 350px; max-width: 100%; object-fit: contain; }
+    nav { background: #333; padding: 10px; text-align: center; position: sticky; top: 0; z-index: 1000; }
+    nav a { color: white; margin: 0 8px; text-decoration: none; font-size: 0.95em; }
+    nav a:hover { text-decoration: underline; }
+    #buscador { width: 90%; padding: 10px; margin: 15px auto; display: block; border-radius: 5px; border: 1px solid #ccc; }
+    section { padding: 20px; }
+    .productos { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
+    .producto { border: 1px solid #ccc; padding: 10px; text-align: center; display: flex; flex-direction: column; justify-content: space-between; position: relative; transition: outline 0.3s; }
+    .producto img { width: 100%; height: 120px; object-fit: cover; }
+    .producto select { width: 100%; margin: 6px 0; padding: 4px; border-radius: 4px; }
+    .producto input { width: 50px; margin: 5px auto; display: block; }
+    .producto button { margin-top: 5px; padding: 8px; background: #333; color: white; border: none; cursor: pointer; }
+    .precio-unidad-seleccionada { min-height: 40px; margin: 4px 0; }
+    .precio-original { text-decoration: line-through; color: #888; font-size: 0.85em; }
+    .precio-final { color: #c0392b; font-weight: bold; }
+    .badge-descuento { background: #c0392b; color: #fff; font-size: 0.7em; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 4px; }
+    .nota-volumen { display: block; color: #555; font-size: 0.62em; margin-top: 2px; }
+    #carrito, #formularioPedido { border: 1px solid #ccc; padding: 20px; margin-top: 20px; }
+    footer { background: black; color: white; text-align: center; padding: 20px; }
+    footer .mision-footer { max-width: 800px; margin: 0 auto 18px auto; font-size: 0.88em; line-height: 1.5; opacity: 0.92; text-align: left; }
+    .contacto-iconos img { width: 25px; vertical-align: middle; margin-right: 8px; }
+    form label { display: block; margin-top: 10px; }
+    form input { width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box; }
+    .medios-pago { margin: 15px 0; display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; }
+    .medios-pago label { cursor: pointer; }
+    .detalle-pago { text-align: center; margin-top: 10px; padding: 10px; background: #f7f7f7; border-radius: 6px; }
+    .detalle-pago button { padding: 10px 20px; background: #333; color: white; border: none; cursor: pointer; border-radius: 4px; }
+    #ofertas { background: #fff8f8; }
+    #ofertas h2 { text-align: center; }
+    .ofertas-grid { display: flex; gap: 12px; overflow-x: auto; padding: 10px 5px; }
+    .oferta-card { flex: 0 0 150px; border: 2px solid #c0392b; border-radius: 8px; padding: 10px; text-align: center; cursor: pointer; background: #fff; }
+    .oferta-card img { width: 100%; height: 80px; object-fit: cover; border-radius: 4px; }
+    #cuponSection { margin-top: 15px; padding: 12px; background: #f7f7f7; border-radius: 6px; }
+    #cuponSection input { padding: 8px; border-radius: 4px; border: 1px solid #ccc; margin-right: 8px; }
+    #cuponSection button { padding: 8px 14px; background: #333; color: white; border: none; cursor: pointer; border-radius: 4px; }
+    #cuponMensaje { margin-top: 8px; font-size: 0.9em; }
+    #btnWhatsappResumen { margin-top: 10px; background: #25D366; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; }
+    .pagina-secundaria { display: none; padding: 25px 20px; max-width: 900px; margin: 0 auto; }
+    .btn-volver { display: inline-block; margin-bottom: 20px; padding: 8px 16px; background: #333; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    .tabla-origen { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.95em; }
+    .tabla-origen th, .tabla-origen td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    .tabla-origen th { background: #333; color: white; }
+    .cert-box { border: 2px solid #2e7d32; border-radius: 8px; padding: 18px; margin-top: 15px; background: #f1f8f1; }
+    .cert-box h3 { color: #2e7d32; margin-top: 0; }
+    .objetivo-block { margin-bottom: 22px; }
+    .objetivo-block h3 { color: #c0392b; margin-bottom: 6px; }
+    .objetivo-block p { line-height: 1.5; }
+    @media (max-width: 600px) { .productos { grid-template-columns: 1fr 1fr; } nav a { display: inline-block; margin: 4px 6px; } }
+  </style>
+</head>
+<body>
+
+<header id="inicio">
+  <img src="https://raw.githubusercontent.com/tonyjam87-APP/NutriTrade/main/LOGO.png" alt="Logo NutriTrade">
+</header>
+
+<nav>
+  <a href="#" onclick="irASeccion('inicio'); return false;">Inicio</a>
+  <a href="#" onclick="irASeccion('ofertas'); return false;">Ofertas</a>
+  <a href="#" onclick="irASeccion('catalogo'); return false;">Catálogo</a>
+  <a href="#" onclick="irASeccion('carrito'); return false;">Carrito</a>
+  <a href="#" onclick="mostrarPagina('conocenos'); return false;">Conócenos</a>
+  <a href="#" onclick="mostrarPagina('productos-origen'); return false;">Nuestros Productos</a>
+  <a href="#" onclick="mostrarPagina('certificaciones'); return false;">Certificaciones</a>
+  <a href="#" onclick="mostrarPagina('objetivos'); return false;">Nuestros Objetivos</a>
+</nav>
+
+<div id="paginaInicio">
+
+  <input type="text" id="buscador" placeholder="🔎 Buscar productos..." onkeyup="filtrarProductos()">
+
+  <section id="ofertas">
+    <h2>🔥 Ofertas de la Semana</h2>
+    <div class="ofertas-grid" id="ofertasGrid"></div>
+  </section>
+
+  <section id="catalogo">
+    <h2>Catálogo</h2>
+    <div class="productos" id="contenedorProductos">
+      <!-- PRODUCTOS -->
+      <div class="producto" data-nombre="Altramuces" data-precio="325">
+        <img src="https://raw.githubusercontent.com/tonyjam87-APP/NutriTrade/main/ALTRAMUCES.png">
+        <p>Altramuces</p>
+        <select class="presentacion" onchange="actualizarPrecioUnidad(this)">
+          <option value="tonelada" data-kg="1000">Tonelada (a granel)</option>
+          <option value="costal10" data-kg="10">Costal 10 kg</option>
+          <option value="costal25" data-kg="25">Costal 25 kg</option>
+          <option value="costal50" data-kg="50">Costal 50 kg</option>
+        </select>
+        <p class="precio-unidad-seleccionada"></p>
+        <input type="number" id="cant-Altramuces" value="1" min="1">
+        <small class="nota-volumen">Desc. volumen (equiv. ton): 5+ -10% | 10+ -15%</small>
+        <button class="btn-add" data-input="cant-Altramuces">Añadir</button>
+      </div>
+      <div class="producto" data-nombre="Arvejas Secas" data-precio="310">
+        <img src="https://raw.githubusercontent.com/tonyjam87-APP/NutriTrade/main/ARVEJAS%20SECAS.png">
+        <p>Arvejas Secas</p>
+        <select class="presentacion" onchange="actualizarPrecioUnidad(this)">
+          <option value="tonelada" data-kg="1000">Tonelada (a granel)</option>
+          <option value="costal10" data-kg="10">Costal 10 kg</option>
+          <option value="costal25" data-kg="25">Costal 25 kg</option>
+          <option value="costal50" data-kg="50">Costal 50 kg</option>
+        </select>
+        <p class="precio-unidad-seleccionada"></p>
+        <input type="number" id="cant-Arvejas" value="1" min="1">
+        <small class="nota-volumen">Desc. volumen (equiv. ton): 5+ -10% | 10+ -15%</small>
+        <button class="btn-add" data-input="cant-Arvejas">Añadir</button>
+      </div>
+      <div class="producto" data-nombre="Garbanzos" data-precio="325">
+        <img src="https://raw.githubusercontent.com/tonyjam87-APP/NutriTrade/main/GARBANZOS.png">
+        <p>Garbanzos</p>
+        <select class="presentacion" onchange="actualizarPrecioUnidad(this)">
+          <option value="tonelada" data-kg="1000">Tonelada (a granel)</option>
+          <option value="costal10" data-kg="10">Costal 10 kg</option>
+          <option value="costal25" data-kg="25">Costal 25 kg</option>
+          <option value="costal50" data-kg="50">Costal 50 kg</option>
+        </select>
+        <p class="precio-unidad-seleccionada"></p>
+        <input type="number" id="cant-Garbanzos" value="1" min="1">
+        <small class="nota-volumen">Desc. volumen (equiv. ton): 5+ -10% | 10+ -15%</small>
+        <button class="btn-add" data-input="cant-Garbanzos">Añadir</button>
+      </div>
+      <div class="producto" data-nombre="Guandú" data-precio="305">
+        <img src="https://raw.githubusercontent.com/tonyjam87-APP/NutriTrade/main/GUANDU.png">
+        <p>Guandú</p>
+        <select class="presentacion" onchange="actualizarPrecioUnidad(this)">
+          <option value="tonelada" data-kg="1000">Tonelada (a granel)</option>
+          <option value="costal10" data-kg="10">Costal 10 kg</option>
+          <option value="costal25" data-kg="25">Costal 25 kg</option>
+          <option value="costal50" data-kg="50">Costal 50 kg</option>
+        </select>
+        <p class="precio-unidad-seleccionada"></p>
+        <input type="number" id="cant-Guandu" value="1" min="1">
+        <small class="nota-volumen">Desc. volumen (equiv. ton): 5+ -10% | 10+ -15%</small>
+        <button class="btn-add" data-input="cant-Guandu">Añadir</button>
+      </div>
+      <div class="producto" data-nombre="Habas Secas" data-precio="305">
+        <img src="https://raw.githubusercontent.com/tonyjam87-APP/NutriTrade/main/HABAS%20SECAS.png">
+        <p>Habas Secas</p>
+        <select class="presentacion" onchange="actualizarPrecioUnidad(this)">
+          <option value="tonelada" data-kg="1000">Tonelada (a granel)</option>
+          <option value="costal10" data-kg="10">Costal 10 kg</option>
+          <option value="costal25" data-kg="25">Costal 25 kg</option>
+          <option value="costal50" data-kg="50">Costal 50 kg</option>
+        </select>
+        <p class="precio-unidad-seleccionada"></p>
+        <input type="number" id="cant-Habas" value="1" min="1">
+        <small class="nota-volumen">Desc. volumen (equiv. ton): 5+ -10% | 10+ -15%</small>
+        <button class="btn-add" data-input="cant-Habas">Añadir</button>
+      </div>
+      <div class="producto" data-nombre="Lentejas" data-precio="315">
+        <img src="https://raw.githubusercontent.com/tonyjam87-APP/NutriTrade/main/LENTEJAS.png">
+        <p>Lentejas</p>
+        <select class="presentacion" onchange="actualizarPrecioUnidad(this)">
+          <option value="tonelada" data-kg="1000">Tonelada (a granel)</option>
+          <option value="costal10" data-kg="10">Costal 10 kg</option>
+          <option value="costal25" data-kg="25">Costal 25 kg</option>
+          <option value="costal50" data-kg="50">Costal 50 kg</option>
+        </select>
+        <p class="precio-unidad-seleccionada"></p>
+        <input type="number" id="cant-Lentejas" value="1" min="1">
+        <small class="nota-volumen">Desc. volumen (equiv. ton): 5+ -10% | 10+ -15%</small>
+        <button class="btn-add" data-input="cant-Lentejas">Añadir</button>
+      </div>
+      <div class="producto" data-nombre="Lentejas Partidas" data-precio="315">
+        <img src="https://raw.githubusercontent.com/tonyjam87-APP/NutriTrade/main/LENTEJAS%20PARTIDAS.png">
+        <p>Lentejas Partidas</p>
+        <select class="presentacion" onchange="actualizarPrecioUnidad(this)">
+          <option value="tonelada" data-kg="1000">Tonelada (a granel)</option>
+          <option value="costal10" data-kg="10">Costal 10 kg</option>
+          <option value="costal25" data-kg="25">Costal 25 kg</option>
+          <option value="costal50" data-kg="50">Costal 50 kg</option>
+        </select>
+        <p class="precio-unidad-seleccionada"></p>
+        <input type="number" id="cant-LentejasP" value="1" min="1">
+        <small class="nota-volumen">Desc. volumen (equiv. ton): 5+ -10% | 10+ -15%</small>
+        <button class="btn-add" data-input="cant-LentejasP">Añadir</button>
+      </div>
+      <div class="producto" data-nombre="Porotos Adzuki" data-precio="340">
+        <img src="https://raw.githubusercontent.com/tonyjam87-APP/NutriTrade/main/POROTOS%20ADZUKI.png">
+        <p>Porotos Adzuki</p>
+        <select class="presentacion" onchange="actualizarPrecioUnidad(this)">
+          <option value="tonelada" data-kg="1000">Tonelada (a granel)</option>
+          <option value="costal10" data-kg="10">Costal 10 kg</option>
+          <option value="costal25" data-kg="25">Costal 25 kg</option>
+          <option value="costal50" data-kg="50">Costal 50 kg</option>
+        </select>
+        <p class="precio-unidad-seleccionada"></p>
+        <input type="number" id="cant-Adzuki" value="1" min="1">
+        <small class="nota-volumen">Desc. volumen (equiv. ton): 5+ -10% | 10+ -15%</small>
+        <button class="btn-add" data-input="cant-Adzuki">Añadir</button>
+      </div>
+      <div class="producto" data-nombre="Porotos Blancos" data-precio="340">
+        <img src="https://raw.githubusercontent.com/tonyjam87-APP/NutriTrade/main/POROTOS%20BLANCOS.png">
+        <p>Porotos Blancos</p>
+        <select class="presentacion" onchange="actualizarPrecioUnidad(this)">
+          <option value="tonelada" data-kg="1000">Tonelada (a granel)</option>
+          <option value="costal10" data-kg="10">Costal 10 kg</option>
+          <option value="costal25" data-kg="25">Costal 25 kg</option>
+          <option value="costal50" data-kg="50">Costal 50 kg</option>
+        </select>
+        <p class="precio-unidad-seleccionada"></p>
+        <input type="number" id="cant-Blancos" value="1" min="1">
+        <small class="nota-volumen">Desc. volumen (equiv. ton): 5+ -10% | 10+ -15%</small>
+        <button class="btn-add" data-input="cant-Blancos">Añadir</button>
+      </div>
+      <div class="producto" data-nombre="Porotos Mung" data-precio="330">
+        <img src="https://raw.githubusercontent.com/tonyjam87-APP/NutriTrade/main/POROTOS%20MUNG.png">
+        <p>Porotos Mung</p>
+        <select class="presentacion" onchange="actualizarPrecioUnidad(this)">
+          <option value="tonelada" data-kg="1000">Tonelada (a granel)</option>
+          <option value="costal10" data-kg="10">Costal 10 kg</option>
+          <option value="costal25" data-kg="25">Costal 25 kg</option>
+          <option value="costal50" data-kg="50">Costal 50 kg</option>
+        </select>
+        <p class="precio-unidad-seleccionada"></p>
+        <input type="number" id="cant-Mung" value="1" min="1">
+        <small class="nota-volumen">Desc. volumen (equiv. ton): 5+ -10% | 10+ -15%</small>
+        <button class="btn-add" data-input="cant-Mung">Añadir</button>
+      </div>
+      <div class="producto" data-nombre="Porotos Negros" data-precio="330">
+        <img src="https://raw.githubusercontent.com/tonyjam87-APP/NutriTrade/main/POROTOS%20NEGROS.png">
+        <p>Porotos Negros</p>
+        <select class="presentacion" onchange="actualizarPrecioUnidad(this)">
+          <option value="tonelada" data-kg="1000">Tonelada (a granel)</option>
+          <option value="costal10" data-kg="10">Costal 10 kg</option>
+          <option value="costal25" data-kg="25">Costal 25 kg</option>
+          <option value="costal50" data-kg="50">Costal 50 kg</option>
+        </select>
+        <p class="precio-unidad-seleccionada"></p>
+        <input type="number" id="cant-Negros" value="1" min="1">
+        <small class="nota-volumen">Desc. volumen (equiv. ton): 5+ -10% | 10+ -15%</small>
+        <button class="btn-add" data-input="cant-Negros">Añadir</button>
+      </div>
+      <div class="producto" data-nombre="Porotos Rojos" data-precio="335">
+        <img src="https://raw.githubusercontent.com/tonyjam87-APP/NutriTrade/main/POROTOS%20ROJOS.png">
+        <p>Porotos Rojos</p>
+        <select class="presentacion" onchange="actualizarPrecioUnidad(this)">
+          <option value="tonelada" data-kg="1000">Tonelada (a granel)</option>
+          <option value="costal10" data-kg="10">Costal 10 kg</option>
+          <option value="costal25" data-kg="25">Costal 25 kg</option>
+          <option value="costal50" data-kg="50">Costal 50 kg</option>
+        </select>
+        <p class="precio-unidad-seleccionada"></p>
+        <input type="number" id="cant-Rojos" value="1" min="1">
+        <small class="nota-volumen">Desc. volumen (equiv. ton): 5+ -10% | 10+ -15%</small>
+        <button class="btn-add" data-input="cant-Rojos">Añadir</button>
+      </div>
+      <div class="producto" data-nombre="Mix de Legumbres" data-precio="325">
+        <img src="https://raw.githubusercontent.com/tonyjam87-APP/NutriTrade/main/MIX%20DE%20LEGUMBRES%20DESIDRATADAS.png">
+        <p>Mix de Legumbres</p>
+        <select class="presentacion" onchange="actualizarPrecioUnidad(this)">
+          <option value="tonelada" data-kg="1000">Tonelada (a granel)</option>
+          <option value="costal10" data-kg="10">Costal 10 kg</option>
+          <option value="costal25" data-kg="25">Costal 25 kg</option>
+          <option value="costal50" data-kg="50">Costal 50 kg</option>
+        </select>
+        <p class="precio-unidad-seleccionada"></p>
+        <input type="number" id="cant-MixLeg" value="1" min="1">
+        <small class="nota-volumen">Desc. volumen (equiv. ton): 5+ -10% | 10+ -15%</small>
+        <button class="btn-add" data-input="cant-MixLeg">Añadir</button>
+      </div>
+      <div class="producto" data-nombre="Mix Energéticos" data-precio="400">
+        <img src="https://raw.githubusercontent.com/tonyjam87-APP/NutriTrade/main/MIX%20ENERGETICOS.png">
+        <p>Mix Energéticos</p>
+        <select class="presentacion" onchange="actualizarPrecioUnidad(this)">
+          <option value="tonelada" data-kg="1000">Tonelada (a granel)</option>
+          <option value="costal10" data-kg="10">Costal 10 kg</option>
+          <option value="costal25" data-kg="25">Costal 25 kg</option>
+          <option value="costal50" data-kg="50">Costal 50 kg</option>
+        </select>
+        <p class="precio-unidad-seleccionada"></p>
+        <input type="number" id="cant-MixEnerg" value="1" min="1">
+        <small class="nota-volumen">Desc. volumen (equiv. ton): 5+ -10% | 10+ -15%</small>
+        <button class="btn-add" data-input="cant-MixEnerg">Añadir</button>
+      </div>
+      <div class="producto" data-nombre="Chips de Vegetales" data-precio="390">
+        <img src="https://raw.githubusercontent.com/tonyjam87-APP/NutriTrade/main/CHIPS%20DE%20VEGETALES.png">
+        <p>Chips de Vegetales</p>
+        <select class="presentacion" onchange="actualizarPrecioUnidad(this)">
+          <option value="tonelada" data-kg="1000">Tonelada (a granel)</option>
+          <option value="costal10" data-kg="10">Costal 10 kg</option>
+          <option value="costal25" data-kg="25">Costal 25 kg</option>
+          <option value="costal50" data-kg="50">Costal 50 kg</option>
+        </select>
+        <p class="precio-unidad-seleccionada"></p>
+        <input type="number" id="cant-Chips" value="1" min="1">
+        <small class="nota-volumen">Desc. volumen (equiv. ton): 5+ -10% | 10+ -15%</small>
+        <button class="btn-add" data-input="cant-Chips">Añadir</button>
+      </div>
+      <div class="producto" data-nombre="Frutos Secos" data-precio="410">
+        <img src="https://raw.githubusercontent.com/tonyjam87-APP/NutriTrade/main/FRUTOS%20SECOS.png">
+        <p>Frutos Secos</p>
+        <select class="presentacion" onchange="actualizarPrecioUnidad(this)">
+          <option value="tonelada" data-kg="1000">Tonelada (a granel)</option>
+          <option value="costal10" data-kg="10">Costal 10 kg</option>
+          <option value="costal25" data-kg="25">Costal 25 kg</option>
+          <option value="costal50" data-kg="50">Costal 50 kg</option>
+        </select>
+        <p class="precio-unidad-seleccionada"></p>
+        <input type="number" id="cant-Frutos" value="1" min="1">
+        <small class="nota-volumen">Desc. volumen (equiv. ton): 5+ -10% | 10+ -15%</small>
+        <button class="btn-add" data-input="cant-Frutos">Añadir</button>
+      </div>
+      <div class="producto" data-nombre="Barritas Energéticas" data-precio="410">
+        <img src="https://raw.githubusercontent.com/tonyjam87-APP/NutriTrade/main/BARRITAS%20ENERGETICAS%20CON%20HARINA%20DE%20LEGUMBRES%20Y%20FRUTAS%20SECAS.png">
+        <p>Barritas Energéticas</p>
+        <select class="presentacion" onchange="actualizarPrecioUnidad(this)">
+          <option value="tonelada" data-kg="1000">Tonelada (a granel)</option>
+          <option value="costal10" data-kg="10">Costal 10 kg</option>
+          <option value="costal25" data-kg="25">Costal 25 kg</option>
+          <option value="costal50" data-kg="50">Costal 50 kg</option>
+        </select>
+        <p class="precio-unidad-seleccionada"></p>
+        <input type="number" id="cant-Barras" value="1" min="1">
+        <small class="nota-volumen">Desc. volumen (equiv. ton): 5+ -10% | 10+ -15%</small>
+        <button class="btn-add" data-input="cant-Barras">Añadir</button>
+      </div>
+      <div class="producto" data-nombre="Semillas de Chía" data-precio="465">
+        <img src="https://raw.githubusercontent.com/tonyjam87-APP/NutriTrade/main/SEMILLAS%20DE%20CHIA.png">
+        <p>Semillas de Chía</p>
+        <select class="presentacion" onchange="actualizarPrecioUnidad(this)">
+          <option value="tonelada" data-kg="1000">Tonelada (a granel)</option>
+          <option value="costal10" data-kg="10">Costal 10 kg</option>
+          <option value="costal25" data-kg="25">Costal 25 kg</option>
+          <option value="costal50" data-kg="50">Costal 50 kg</option>
+        </select>
+        <p class="precio-unidad-seleccionada"></p>
+        <input type="number" id="cant-Chia" value="1" min="1">
+        <small class="nota-volumen">Desc. volumen (equiv. ton): 5+ -10% | 10+ -15%</small>
+        <button class="btn-add" data-input="cant-Chia">Añadir</button>
+      </div>
+      <div class="producto" data-nombre="Semillas de Girasol" data-precio="470">
+        <img src="https://raw.githubusercontent.com/tonyjam87-APP/NutriTrade/main/SEMILLAS%20DE%20GIRASOL.png">
+        <p>Semillas de Girasol</p>
+        <select class="presentacion" onchange="actualizarPrecioUnidad(this)">
+          <option value="tonelada" data-kg="1000">Tonelada (a granel)</option>
+          <option value="costal10" data-kg="10">Costal 10 kg</option>
+          <option value="costal25" data-kg="25">Costal 25 kg</option>
+          <option value="costal50" data-kg="50">Costal 50 kg</option>
+        </select>
+        <p class="precio-unidad-seleccionada"></p>
+        <input type="number" id="cant-Girasol" value="1" min="1">
+        <small class="nota-volumen">Desc. volumen (equiv. ton): 5+ -10% | 10+ -15%</small>
+        <button class="btn-add" data-input="cant-Girasol">Añadir</button>
+      </div>
+      <div class="producto" data-nombre="Semillas de Lino" data-precio="425">
+        <img src="https://raw.githubusercontent.com/tonyjam87-APP/NutriTrade/main/SEMILLAS%20DE%20LINO.png">
+        <p>Semillas de Lino</p>
+        <select class="presentacion" onchange="actualizarPrecioUnidad(this)">
+          <option value="tonelada" data-kg="1000">Tonelada (a granel)</option>
+          <option value="costal10" data-kg="10">Costal 10 kg</option>
+          <option value="costal25" data-kg="25">Costal 25 kg</option>
+          <option value="costal50" data-kg="50">Costal 50 kg</option>
+        </select>
+        <p class="precio-unidad-seleccionada"></p>
+        <input type="number" id="cant-Lino" value="1" min="1">
+        <small class="nota-volumen">Desc. volumen (equiv. ton): 5+ -10% | 10+ -15%</small>
+        <button class="btn-add" data-input="cant-Lino">Añadir</button>
+      </div>
+      <div class="producto" data-nombre="Semillas de Sésamo" data-precio="455">
+        <img src="https://raw.githubusercontent.com/tonyjam87-APP/NutriTrade/main/SEMILLAS%20DE%20SESAMO.png">
+        <p>Semillas de Sésamo</p>
+        <select class="presentacion" onchange="actualizarPrecioUnidad(this)">
+          <option value="tonelada" data-kg="1000">Tonelada (a granel)</option>
+          <option value="costal10" data-kg="10">Costal 10 kg</option>
+          <option value="costal25" data-kg="25">Costal 25 kg</option>
+          <option value="costal50" data-kg="50">Costal 50 kg</option>
+        </select>
+        <p class="precio-unidad-seleccionada"></p>
+        <input type="number" id="cant-Sesamo" value="1" min="1">
+        <small class="nota-volumen">Desc. volumen (equiv. ton): 5+ -10% | 10+ -15%</small>
+        <button class="btn-add" data-input="cant-Sesamo">Añadir</button>
+      </div>
+      <div class="producto" data-nombre="Semillas de Soja" data-precio="320">
+        <img src="https://raw.githubusercontent.com/tonyjam87-APP/NutriTrade/main/SEMILLAS%20DE%20SOJA.png">
+        <p>Semillas de Soja</p>
+        <select class="presentacion" onchange="actualizarPrecioUnidad(this)">
+          <option value="tonelada" data-kg="1000">Tonelada (a granel)</option>
+          <option value="costal10" data-kg="10">Costal 10 kg</option>
+          <option value="costal25" data-kg="25">Costal 25 kg</option>
+          <option value="costal50" data-kg="50">Costal 50 kg</option>
+        </select>
+        <p class="precio-unidad-seleccionada"></p>
+        <input type="number" id="cant-Soja" value="1" min="1">
+        <small class="nota-volumen">Desc. volumen (equiv. ton): 5+ -10% | 10+ -15%</small>
+        <button class="btn-add" data-input="cant-Soja">Añadir</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="carrito">
+    <h2>Carrito</h2>
+    <ul id="listaCarrito"></ul>
+    <p><strong>Total: $<span id="total">0</span></strong></p>
+
+    <div id="cuponSection">
+      <label for="cupon">🎟️ ¿Tenés un cupón de primera compra?</label><br>
+      <input type="text" id="cupon" placeholder="Código de cupón">
+      <button onclick="aplicarCupon()">Aplicar</button>
+      <p id="cuponMensaje"></p>
+    </div>
+
+    <button onclick="intentarHacerPedido()" style="margin-top:15px;">Hacer Pedido</button>
+  </section>
+
+  <section id="formularioPedido" style="display:none;">
+    <h2>Datos del Cliente</h2>
+    <form onsubmit="event.preventDefault(); confirmarPedido();">
+      <label>Nombre y Apellido:</label><input type="text" id="cliente" required>
+      <label>Correo electrónico:</label><input type="email" id="correo" required>
+      <label>Dirección:</label><input type="text" id="direccion" required>
+      <label>Código Postal:</label><input type="text" id="cp" required>
+      <label>Localidad:</label><input type="text" id="localidad" required>
+      <label>País:</label><input type="text" id="pais" required>
+      <label>Teléfono:</label><input type="text" id="telefono" required>
+      <button type="submit">Confirmar Pedido</button>
+    </form>
+
+    <div id="qrPago" style="display:none; margin-top:20px; text-align:center;">
+      <h3>📲 Elegí tu medio de pago</h3>
+      <p><strong>Total a pagar: $<span id="totalPago"></span></strong></p>
+
+      <div class="medios-pago">
+        <label><input type="radio" name="metodoPago" value="mercadopago" checked onchange="mostrarMetodoPago(this.value)"> Mercado Pago</label>
+        <label><input type="radio" name="metodoPago" value="paypal" onchange="mostrarMetodoPago(this.value)"> PayPal</label>
+        <label><input type="radio" name="metodoPago" value="transferencia" onchange="mostrarMetodoPago(this.value)"> Transferencia Bancaria</label>
+      </div>
+
+      <div id="pago-mercadopago" class="detalle-pago">
+        <a href="https://mpago.la/tu-link-generico" target="_blank"><button>Pagar con Mercado Pago</button></a>
+      </div>
+      <div id="pago-paypal" class="detalle-pago" style="display:none;">
+        <a href="https://paypal.me/TuUsuarioPayPal" target="_blank"><button>Pagar con PayPal</button></a>
+        <p style="font-size:0.85em; color:#555;">(Reemplazá este link por tu usuario real de PayPal.me)</p>
+      </div>
+      <div id="pago-transferencia" class="detalle-pago" style="display:none;">
+        <p>Alias: <strong>nutritrade.mp</strong></p>
+        <p>CBU: <strong>0000000000000000000000</strong></p>
+        <p style="font-size:0.85em; color:#555;">(Reemplazá con tu alias y CBU reales)</p>
+      </div>
+
+      <p>Luego enviá el comprobante al WhatsApp: <a href="https://wa.me/541140318521" target="_blank">1140318521</a></p>
+      <button id="btnWhatsappResumen" onclick="enviarResumenWhatsapp()">📱 Enviar resumen del pedido por WhatsApp</button>
+    </div>
+  </section>
+
+</div>
+
+<!-- ================= PÁGINA: CONÓCENOS ================= -->
+<div id="pagina-conocenos" class="pagina-secundaria">
+  <button class="btn-volver" onclick="mostrarInicio()">← Volver al inicio</button>
+  <h2>Conócenos</h2>
+  <p>NutriTrade nació hace poco más de un año, en 2025, de la mano de un pequeño equipo con raíces en el campo argentino. Vimos que en distintas provincias del país se producían legumbres, semillas y frutos secos de altísima calidad, pero que gran parte de esa producción no encontraba un canal directo y confiable para llegar tanto a comercios locales como a mercados internacionales.</p>
+  <p>Empezamos comprando directamente a productores regionales, armando pedidos a mano y entregando nosotros mismos las primeras cajas. En este primer año de camino fuimos sumando proveedores de confianza en distintas zonas del país, mejorando nuestros procesos de control de calidad y construyendo una relación cercana con cada productor, entendiendo que detrás de cada bolsa de legumbres hay una familia y una cosecha.</p>
+  <p>Hoy seguimos siendo una empresa joven, pero con un objetivo claro: ser el puente entre el productor regional y quien necesita materia prima de calidad, ya sea un comercio, una industria alimenticia o un importador. Creemos en la trazabilidad, en el trato directo y en construir relaciones comerciales de largo plazo, no solo ventas puntuales.</p>
+</div>
+
+<!-- ================= PÁGINA: NUESTROS PRODUCTOS ================= -->
+<div id="pagina-productos-origen" class="pagina-secundaria">
+  <button class="btn-volver" onclick="mostrarInicio()">← Volver al inicio</button>
+  <h2>Nuestros Productos</h2>
+  <p>Trabajamos con productores de distintas provincias argentinas, seleccionando en cada región lo que mejor se produce en ella. A continuación, el origen de cada uno de nuestros productos:</p>
+  <table class="tabla-origen">
+    <tr><th>Producto</th><th>Provincia de origen</th></tr>
+    <tr><td>Altramuces</td><td>Córdoba</td></tr>
+    <tr><td>Arvejas Secas</td><td>Buenos Aires</td></tr>
+    <tr><td>Garbanzos</td><td>Salta</td></tr>
+    <tr><td>Guandú</td><td>Santiago del Estero</td></tr>
+    <tr><td>Habas Secas</td><td>Mendoza</td></tr>
+    <tr><td>Lentejas</td><td>Córdoba</td></tr>
+    <tr><td>Lentejas Partidas</td><td>Córdoba</td></tr>
+    <tr><td>Porotos Adzuki</td><td>Salta</td></tr>
+    <tr><td>Porotos Blancos</td><td>Santiago del Estero</td></tr>
+    <tr><td>Porotos Mung</td><td>Chaco</td></tr>
+    <tr><td>Porotos Negros</td><td>Salta</td></tr>
+    <tr><td>Porotos Rojos</td><td>Jujuy</td></tr>
+    <tr><td>Mix de Legumbres</td><td>Varios orígenes (mezcla regional)</td></tr>
+    <tr><td>Mix Energéticos</td><td>Varios orígenes (mezcla regional)</td></tr>
+    <tr><td>Chips de Vegetales</td><td>Mendoza</td></tr>
+    <tr><td>Frutos Secos</td><td>Río Negro (Alto Valle)</td></tr>
+    <tr><td>Barritas Energéticas</td><td>Elaboradas en Buenos Aires</td></tr>
+    <tr><td>Semillas de Chía</td><td>Salta / Jujuy</td></tr>
+    <tr><td>Semillas de Girasol</td><td>Buenos Aires / La Pampa</td></tr>
+    <tr><td>Semillas de Lino</td><td>Buenos Aires</td></tr>
+    <tr><td>Semillas de Sésamo</td><td>Santiago del Estero / Salta</td></tr>
+    <tr><td>Semillas de Soja</td><td>Córdoba / Santa Fe</td></tr>
+  </table>
+</div>
+
+<!-- ================= PÁGINA: CERTIFICACIONES ================= -->
+<div id="pagina-certificaciones" class="pagina-secundaria">
+  <button class="btn-volver" onclick="mostrarInicio()">← Volver al inicio</button>
+  <h2>Certificaciones</h2>
+  <div class="cert-box">
+    <h3>✅ ANMAT</h3>
+    <p>Nuestros productos cuentan con habilitación ante la ANMAT (Administración Nacional de Medicamentos, Alimentos y Tecnología Médica), garantizando el cumplimiento de las normas bromatológicas vigentes para la comercialización de alimentos en Argentina.</p>
+  </div>
+  <div class="cert-box">
+    <h3>✅ SENASA</h3>
+    <p>Trabajamos habilitados por SENASA (Servicio Nacional de Sanidad y Calidad Agroalimentaria), lo que nos permite garantizar el control fitosanitario de nuestras legumbres, semillas y frutos secos, tanto para venta local como para procesos de exportación.</p>
+  </div>
+  <div class="cert-box">
+    <h3>✅ Certificado COA</h3>
+    <p>Cada lote de nuestros productos cuenta con su Certificado de Análisis (COA), donde se detallan los parámetros de calidad, pureza y condiciones sanitarias verificados en laboratorio. Esto le permite a nuestros clientes conocer exactamente qué están comprando antes de recibir la mercadería, y es un respaldo clave en operaciones de exportación.</p>
+  </div>
+  <p style="font-size:0.85em; color:#555; margin-top:15px;">* Recordá completar aquí los números de RNE / RNPA y demás registros correspondientes una vez tramitados.</p>
+</div>
+
+<!-- ================= PÁGINA: NUESTROS OBJETIVOS ================= -->
+<div id="pagina-objetivos" class="pagina-secundaria">
+  <button class="btn-volver" onclick="mostrarInicio()">← Volver al inicio</button>
+  <h2>Nuestros Objetivos</h2>
+
+  <div class="objetivo-block">
+    <h3>1. Visión y Propósito</h3>
+    <p>Esta propuesta no busca reemplazar a los grandes exportadores, sino potenciar al pequeño productor. Se ha identificado una gran oferta de productos de alta calidad que, por su escala, no encuentran una vía eficiente para llegar a mercados internacionales. La plataforma provee la vitrina digital y la automatización de los procesos aduaneros necesarios para que el productor pueda comercializar su mercancía sin dedicar recursos excesivos a la gestión burocrática. El valor principal es actuar como un habilitador que conecta la producción local con el mercado global.</p>
+  </div>
+
+  <div class="objetivo-block">
+    <h3>2. Misión Social</h3>
+    <p>La plataforma actúa como un instrumento de estabilidad para el productor. Con frecuencia, el productor regional tiene una excelente cosecha, pero carece de canales de venta adecuados, lo que provoca que su producción se convierta en desperdicio. La plataforma maximiza el valor de la cosecha al conectar ese excedente con mercados internacionales que cuentan con demanda y ofrecen precios justos, convirtiendo así el riesgo de pérdida en una oportunidad de exportación.</p>
+  </div>
+
+  <div class="objetivo-block">
+    <h3>3. Logística y Operativa</h3>
+    <p>El modelo opera bajo un esquema de responsabilidad compartida. El productor es responsable de la entrega en un centro de consolidación habilitado, lo que garantiza el control de calidad en origen. A partir de ese punto, la plataforma ofrece al comprador la opción de contratar el transporte internacional a través de una red de socios logísticos homologados o gestionar su propio transporte. De esta manera, la plataforma elimina fricciones: no asume el costo logístico directamente, sino que lo coordina y optimiza mediante la tecnología.</p>
+  </div>
+
+  <div class="objetivo-block">
+    <h3>4. Gestión de Documentación y Aduana</h3>
+    <p>La responsabilidad legal recae sobre el productor, quien actúa como exportador. La plataforma se encarga de la fase de pre-exportación mediante la automatización de la recopilación de datos, la generación de documentos base y la gestión de permisos fitosanitarios. Posteriormente, se delega la presentación formal y la firma ante la Aduana a un despachante homologado, quien trabaja en conjunto con el sistema para asegurar que la documentación sea precisa y evitar demoras o sanciones.</p>
+  </div>
+
+  <div class="objetivo-block">
+    <h3>5. Seguimiento (Tracking)</h3>
+    <p>El seguimiento se basa en un modelo de trazabilidad delegada. Dado que la operación se entrega en puerto (bajo términos FOB/FCA), el transporte internacional es gestionado por el comprador. En ese punto, el sistema automatiza el traspaso de la información: cuando el transportista recibe la carga, el número de seguimiento oficial se registra automáticamente en la plataforma. De esta forma, el cliente accede al seguimiento directo de la naviera o el agente de carga, obteniendo información precisa y legalmente vinculante.</p>
+  </div>
+</div>
+
+<footer>
+  <p class="mision-footer">Esta página no se centra únicamente en la venta de productos por internet, sino en la eliminación de las barreras de entrada para que los productores regionales puedan competir a escala global. La plataforma es un motor que transforma una oferta local en un negocio de exportación, centralizando la tecnología, la logística y la burocracia en una interfaz simple, eficiente y escalable.</p>
+  <p>© 2026 NutriTrade</p>
+  <div class="contacto-iconos">
+    <p><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"> <a href="https://wa.me/541140318521" target="_blank">1140318521</a></p>
+    <p><img src="https://upload.wikimedia.org/wikipedia/commons/4/4e/Gmail_Icon.png"> tonyjam87@gmail.com</p>
+    <p><img src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png"> @NutriTrade</p>
+  </div>
+</footer>
+
+<script>
+  let carrito = JSON.parse(localStorage.getItem('carrito')) || [];
+  let carritoConfirmado = [];
+  let total = 0;
+  let cuponAplicado = 0;
+  let ultimoNumPedido = null;
+  let descuentosSemana = {}; // { nombreProducto: porcentajeDescuento }
+
+  function actualizarStorage() {
+      localStorage.setItem('carrito', JSON.stringify(carrito));
+  }
+
+  // ---------- NAVEGACIÓN ENTRE PANTALLAS ----------
+
+  function mostrarPagina(nombre) {
+      document.getElementById('paginaInicio').style.display = 'none';
+      document.querySelectorAll('.pagina-secundaria').forEach(p => p.style.display = 'none');
+      document.getElementById('pagina-' + nombre).style.display = 'block';
+      window.scrollTo(0, 0);
+  }
+
+  function mostrarInicio() {
+      document.getElementById('paginaInicio').style.display = 'block';
+      document.querySelectorAll('.pagina-secundaria').forEach(p => p.style.display = 'none');
+      window.scrollTo(0, 0);
+  }
+
+  function irASeccion(id) {
+      mostrarInicio();
+      setTimeout(() => {
+          const el = document.getElementById(id);
+          if (el) el.scrollIntoView({behavior: 'smooth'});
+      }, 50);
+  }
+
+  // ---------- DESCUENTOS SEMANALES: SOLO 5 PRODUCTOS POR SEMANA ----------
+  // Cada semana se eligen 5 productos al azar (de forma determinística, no
+  // cambia al recargar la página) y se les asigna un descuento de 5% a 20%.
+
+  function getSemanaActual() {
+      const ahora = new Date();
+      const inicio = new Date(ahora.getFullYear(), 0, 1);
+      const dias = Math.floor((ahora - inicio) / 86400000);
+      const semana = Math.ceil((dias + inicio.getDay() + 1) / 7);
+      return ahora.getFullYear() + "-S" + semana;
+  }
+
+  function hashString(str) {
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+          hash = (hash << 5) - hash + str.charCodeAt(i);
+          hash |= 0;
+      }
+      return Math.abs(hash);
+  }
+
+  function calcularDescuentosSemana() {
+      const semana = getSemanaActual();
+      const nombres = Array.from(document.querySelectorAll('.producto')).map(p => p.dataset.nombre);
+      const conHash = nombres.map(nombre => ({nombre, hash: hashString(nombre + semana)}));
+      conHash.sort((a, b) => a.hash - b.hash);
+      const elegidos = conHash.slice(0, 5); // solo 5 productos por semana
+      const mapa = {};
+      elegidos.forEach(item => {
+          mapa[item.nombre] = 5 + (item.hash % 16); // descuento entre 5% y 20%
+      });
+      return mapa;
+  }
+
+  function getDescuentoProducto(nombre) {
+      return descuentosSemana[nombre] || 0;
+  }
+
+  // ---------- PRESENTACIONES: TONELADA / COSTALES ----------
+
+  function actualizarPrecioUnidad(select) {
+      const producto = select.closest('.producto');
+      const nombre = producto.dataset.nombre;
+      const precioTon = parseFloat(producto.dataset.precio);
+      const opcion = select.options[select.selectedIndex];
+      const kg = parseFloat(opcion.dataset.kg);
+      const precioPorKg = precioTon / 1000;
+
+      let precioUnidad, etiqueta;
+      if (opcion.value === 'tonelada') {
+          precioUnidad = precioTon;
+          etiqueta = 'tonelada';
+      } else {
+          // recargo del 15% por fraccionamiento en costales
+          precioUnidad = Math.round(precioPorKg * kg * 1.15);
+          etiqueta = opcion.textContent;
+      }
+
+      const descuentoSemanal = getDescuentoProducto(nombre);
+      const precioConDescuento = Math.round(precioUnidad * (1 - descuentoSemanal / 100));
+
+      const info = producto.querySelector('.precio-unidad-seleccionada');
+      if (descuentoSemanal > 0) {
+          info.innerHTML = `<span class="precio-original">$${precioUnidad}</span> `
+              + `<span class="precio-final">$${precioConDescuento}</span> / ${etiqueta} `
+              + `<span class="badge-descuento">-${descuentoSemanal}% esta semana</span>`;
+      } else {
+          info.innerHTML = `$${precioUnidad} / ${etiqueta}`;
+      }
+
+      producto.dataset.precioUnidadActual = precioConDescuento;
+      producto.dataset.kgActual = kg;
+      producto.dataset.etiquetaActual = etiqueta;
+  }
+
+  // ---------- DESCUENTO POR VOLUMEN (equivalente en toneladas) ----------
+
+  function getDescuentoVolumen(equivalenteToneladas) {
+      if (equivalenteToneladas >= 10) return 15;
+      if (equivalenteToneladas >= 5) return 10;
+      return 0;
+  }
+
+  // ---------- OFERTAS DE LA SEMANA ----------
+
+  function mostrarOfertas() {
+      const grid = document.getElementById('ofertasGrid');
+      grid.innerHTML = '';
+      let hayOfertas = false;
+      document.querySelectorAll('.producto').forEach(prod => {
+          const nombre = prod.dataset.nombre;
+          const descuento = getDescuentoProducto(nombre);
+          if (descuento > 0) {
+              hayOfertas = true;
+              const imgSrc = prod.querySelector('img').src;
+              const card = document.createElement('div');
+              card.className = 'oferta-card';
+              card.innerHTML = `<img src="${imgSrc}">
+                  <p style="margin:5px 0; font-weight:bold;">${nombre}</p>
+                  <span class="badge-descuento">-${descuento}%</span>`;
+              card.onclick = () => {
+                  irASeccion('catalogo');
+                  setTimeout(() => {
+                      prod.scrollIntoView({behavior: 'smooth', block: 'center'});
+                      prod.style.outline = '3px solid #c0392b';
+                      setTimeout(() => { prod.style.outline = ''; }, 1500);
+                  }, 150);
+              };
+              grid.appendChild(card);
+          }
+      });
+      if (!hayOfertas) {
+          grid.innerHTML = '<p>No hay ofertas activas esta semana. ¡Volvé pronto!</p>';
+      }
+  }
+
+  // ---------- CUPÓN DE PRIMERA COMPRA ----------
+
+  function aplicarCupon() {
+      const codigo = document.getElementById('cupon').value.trim().toUpperCase();
+      const mensaje = document.getElementById('cuponMensaje');
+      if (localStorage.getItem('compraRealizada')) {
+          mensaje.textContent = '❌ El cupón de primera compra ya fue utilizado en este dispositivo.';
+          cuponAplicado = 0;
+      } else if (codigo === 'BIENVENIDO10') {
+          cuponAplicado = 10;
+          mensaje.textContent = '✅ Cupón aplicado: 10% de descuento en tu primera compra.';
+      } else {
+          cuponAplicado = 0;
+          mensaje.textContent = '❌ Código inválido.';
+      }
+      mostrarCarrito();
+  }
+
+  function calcularTotalFinal() {
+      return cuponAplicado > 0 ? Math.round(total * (1 - cuponAplicado / 100)) : total;
+  }
+
+  // ---------- CARRITO ----------
+
+  function agregarAlCarrito(producto, precio, idInput, descuentoVolumen, unidad) {
+      const cantidad = parseInt(document.getElementById(idInput).value);
+      carrito.push({producto, precio, cantidad, descuentoVolumen: descuentoVolumen || 0, unidad: unidad || 'tonelada'});
+      actualizarStorage();
+      mostrarCarrito();
+  }
+
+  function mostrarCarrito() {
+      const lista = document.getElementById("listaCarrito");
+      lista.innerHTML = "";
+      total = 0;
+
+      if (carrito.length === 0) {
+          const li = document.createElement("li");
+          li.textContent = "Tu carrito está vacío.";
+          li.style.color = "#888";
+          lista.appendChild(li);
+      }
+
+      carrito.forEach((item, index) => {
+          const subtotal = item.precio * item.cantidad;
+          total += subtotal;
+
+          const li = document.createElement("li");
+          let texto = `${item.producto} (x${item.cantidad} ${item.unidad}) - $${subtotal}`;
+          if (item.descuentoVolumen > 0) texto += ` (desc. volumen -${item.descuentoVolumen}%)`;
+          li.textContent = texto;
+
+          const btn = document.createElement("button");
+          btn.textContent = "❌";
+          btn.style.marginLeft = "10px";
+          btn.onclick = () => {
+              carrito.splice(index, 1);
+              actualizarStorage();
+              mostrarCarrito();
+          };
+          li.appendChild(btn);
+          lista.appendChild(li);
+      });
+
+      const totalEl = document.getElementById("total");
+      if (cuponAplicado > 0 && carrito.length > 0) {
+          const totalFinal = calcularTotalFinal();
+          totalEl.innerHTML = `<span style="text-decoration:line-through;color:#888;">$${total}</span> $${totalFinal} (cupón -${cuponAplicado}%)`;
+      } else {
+          totalEl.textContent = total;
+      }
+  }
+
+  function intentarHacerPedido() {
+      if (carrito.length === 0) {
+          alert('Tu carrito está vacío. Agregá productos antes de hacer el pedido.');
+          return;
+      }
+      document.getElementById('formularioPedido').style.display = 'block';
+      document.getElementById('formularioPedido').scrollIntoView({behavior: 'smooth'});
+  }
+
+  function confirmarPedido() {
+      const numPedido = "NUT-" + Date.now().toString().slice(-6);
+      ultimoNumPedido = numPedido;
+      const totalFinal = calcularTotalFinal();
+
+      const datos = {
+          cliente: document.getElementById("cliente").value,
+          correo: document.getElementById("correo").value,
+          direccion: document.getElementById("direccion").value,
+          cp: document.getElementById("cp").value,
+          localidad: document.getElementById("localidad").value,
+          pais: document.getElementById("pais").value,
+          telefono: document.getElementById("telefono").value,
+          numPedido: numPedido,
+          carrito: carrito,
+          totalOriginal: total,
+          totalFinal: totalFinal,
+          cuponAplicado: cuponAplicado
+      };
+
+      fetch("https://hook.us2.make.com/f1q5tz6y6qvo909jmzqrl8sv3uupb43y", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(datos)
+      })
+      .then(res => {
+          if (res.ok) {
+              carritoConfirmado = JSON.parse(JSON.stringify(carrito));
+              document.getElementById('formularioPedido').style.display = "none";
+              alert("✅ Pedido enviado. Nº de referencia: " + numPedido);
+              document.getElementById("qrPago").style.display = "block";
+              document.getElementById("totalPago").textContent = totalFinal.toFixed(2);
+
+              localStorage.setItem('compraRealizada', 'true');
+              cuponAplicado = 0;
+              carrito = [];              // el carrito queda vacío tras confirmar
+              actualizarStorage();
+              mostrarCarrito();
+              actualizarEstadoCupon();
+          } else {
+              alert("❌ Error al registrar el pedido");
+          }
+      })
+      .catch(error => { alert("❌ Error de conexión"); });
+  }
+
+  function actualizarEstadoCupon() {
+      const cuponInput = document.getElementById('cupon');
+      const cuponBtn = document.querySelector('#cuponSection button');
+      const mensaje = document.getElementById('cuponMensaje');
+      if (localStorage.getItem('compraRealizada')) {
+          cuponInput.disabled = true;
+          cuponBtn.disabled = true;
+          mensaje.textContent = 'El cupón de primera compra ya fue utilizado en este dispositivo.';
+      }
+  }
+
+  // ---------- MEDIOS DE PAGO ----------
+
+  function mostrarMetodoPago(valor) {
+      document.querySelectorAll('.detalle-pago').forEach(div => div.style.display = 'none');
+      document.getElementById('pago-' + valor).style.display = 'block';
+  }
+
+  // ---------- WHATSAPP AUTOMÁTICO ----------
+
+  function enviarResumenWhatsapp() {
+      if (!ultimoNumPedido || carritoConfirmado.length === 0) return;
+      let mensaje = `Hola! Quiero confirmar mi pedido ${ultimoNumPedido}:\n`;
+      carritoConfirmado.forEach(item => {
+          mensaje += `- ${item.producto} x${item.cantidad} ${item.unidad}: $${item.precio * item.cantidad}\n`;
+      });
+      mensaje += `Total: $${document.getElementById('totalPago').textContent}`;
+      const url = `https://wa.me/541140318521?text=${encodeURIComponent(mensaje)}`;
+      window.open(url, '_blank');
+  }
+
+  // ---------- BUSCADOR ----------
+
+  function filtrarProductos() {
+      const filtro = document.getElementById("buscador").value.toLowerCase();
+      document.querySelectorAll(".producto").forEach(p => {
+          p.style.display = p.getAttribute("data-nombre").toLowerCase().includes(filtro) ? "flex" : "none";
+      });
+  }
+
+  // ---------- BOTONES "AÑADIR" ----------
+
+  document.querySelectorAll('.btn-add').forEach(btn => {
+      btn.addEventListener('click', () => {
+          const producto = btn.closest('.producto');
+          const nombre = producto.dataset.nombre;
+          const inputId = btn.dataset.input;
+          const cantidad = parseInt(document.getElementById(inputId).value);
+          const precioUnidad = parseFloat(producto.dataset.precioUnidadActual);
+          const kg = parseFloat(producto.dataset.kgActual);
+          const etiqueta = producto.dataset.etiquetaActual;
+
+          const equivalenteToneladas = (cantidad * kg) / 1000;
+          const descVolumen = getDescuentoVolumen(equivalenteToneladas);
+          const precioFinal = Math.round(precioUnidad * (1 - descVolumen / 100));
+
+          agregarAlCarrito(nombre, precioFinal, inputId, descVolumen, etiqueta);
+      });
+  });
+
+  window.onload = () => {
+      descuentosSemana = calcularDescuentosSemana();
+      document.querySelectorAll('.presentacion').forEach(select => actualizarPrecioUnidad(select));
+      mostrarOfertas();
+      mostrarCarrito();
+      actualizarEstadoCupon();
+  };
+</script>
+</body>
+</html>
